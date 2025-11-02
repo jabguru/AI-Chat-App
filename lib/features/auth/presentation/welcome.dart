@@ -1,10 +1,10 @@
 import 'package:ai_chat_app/gen/assets.gen.dart';
-import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
-import 'package:ai_chat_app/screens/create_account.dart';
-import 'package:ai_chat_app/screens/login.dart';
-import 'package:ai_chat_app/theme/colors.dart';
-import 'package:ai_chat_app/widgets/button.dart';
-import 'package:ai_chat_app/widgets/space.dart';
+import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
+import 'package:ai_chat_app/features/auth/presentation/create_account.dart';
+import 'package:ai_chat_app/features/auth/presentation/login.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/button.dart';
+import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {

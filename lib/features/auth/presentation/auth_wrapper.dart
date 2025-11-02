@@ -1,7 +1,7 @@
-import 'package:ai_chat_app/screens/chat_screen.dart';
-import 'package:ai_chat_app/screens/welcome.dart';
-import 'package:ai_chat_app/services/supabase_service.dart';
-import 'package:ai_chat_app/theme/colors.dart';
+import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
+import 'package:ai_chat_app/features/auth/presentation/welcome.dart';
+import 'package:ai_chat_app/shared/services/supabase_service.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:flutter/material.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -19,7 +19,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return StreamBuilder(
       stream: _supabase.authStateChanges,
       builder: (context, snapshot) {
-        // Show loading while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: AppColors.background,
@@ -31,14 +30,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
           );
         }
 
-        // Check if user is logged in
         final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session != null) {
-          // User is logged in, go to chat
           return ChatScreen();
         } else {
-          // User is not logged in, show welcome
           return WelcomeScreen();
         }
       },

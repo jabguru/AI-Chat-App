@@ -1,5 +1,5 @@
+import 'package:ai_chat_app/core/widgets/textfield.dart';
 import 'package:ai_chat_app/gen/assets.gen.dart';
-import 'package:ai_chat_app/widgets/textfield.dart';
 import 'package:flutter/material.dart';
 
 class PasswordField extends StatefulWidget {

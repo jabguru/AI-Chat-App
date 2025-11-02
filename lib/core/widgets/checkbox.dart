@@ -1,5 +1,5 @@
-import 'package:ai_chat_app/theme/colors.dart';
-import 'package:ai_chat_app/widgets/custom_container.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/custom_container.dart';
 import 'package:flutter/material.dart';
 
 class CustomCheckbox extends StatefulWidget {

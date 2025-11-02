@@ -1,5 +1,5 @@
+import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:ai_chat_app/gen/fonts.gen.dart';
-import 'package:ai_chat_app/theme/colors.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme {

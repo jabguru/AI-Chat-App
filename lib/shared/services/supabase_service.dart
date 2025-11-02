@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ai_chat_app/config/env_config.dart';
-import 'package:ai_chat_app/models/message.dart';
-import 'package:ai_chat_app/models/chat_session.dart';
+import 'package:ai_chat_app/core/config/env_config.dart';
+import 'package:ai_chat_app/features/chat/data/models/message.dart';
+import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
 
 class SupabaseService {
   static SupabaseService? _instance;

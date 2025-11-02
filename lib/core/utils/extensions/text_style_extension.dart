@@ -1,5 +1,5 @@
+import 'package:ai_chat_app/core/utils/extensions/double_extension.dart';
 import 'package:ai_chat_app/gen/fonts.gen.dart';
-import 'package:ai_chat_app/global/util/extensions/double_extension.dart';
 import 'package:flutter/material.dart';
 
 extension TextStyleX on TextStyle? {

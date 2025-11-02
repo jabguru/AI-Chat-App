@@ -1,4 +1,4 @@
-import 'package:ai_chat_app/widgets/space.dart' as space;
+import 'package:ai_chat_app/core/widgets/space.dart' as space;
 import 'package:flutter/material.dart';
 
 extension ContextExtension on BuildContext {

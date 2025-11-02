@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:ai_chat_app/models/chat_session.dart';
-import 'package:ai_chat_app/models/message.dart';
-import 'package:ai_chat_app/services/supabase_service.dart';
-import 'package:ai_chat_app/services/openai_service.dart';
+import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
+import 'package:ai_chat_app/features/chat/data/models/message.dart';
+import 'package:ai_chat_app/shared/services/supabase_service.dart';
+import 'package:ai_chat_app/shared/services/openai_service.dart';
 
 part 'chat_provider.g.dart';
 
@@ -84,7 +84,7 @@ class ChatMessages extends _$ChatMessages {
 
     ref.invalidateSelf();
 
-    if (messages.length == 0) {
+    if (messages.isEmpty) {
       final title = content.length > 30 ? '${content.substring(0, 30)}...' : content;
       await supabase.updateChatSession(sessionId, title);
       ref.invalidate(chatSessionsProvider);

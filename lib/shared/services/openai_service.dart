@@ -1,6 +1,6 @@
 import 'package:dart_openai/dart_openai.dart';
-import 'package:ai_chat_app/config/env_config.dart';
-import 'package:ai_chat_app/models/message.dart';
+import 'package:ai_chat_app/core/config/env_config.dart';
+import 'package:ai_chat_app/features/chat/data/models/message.dart';
 
 class OpenAIService {
   static OpenAIService? _instance;
@@ -18,7 +18,6 @@ class OpenAIService {
     List<Message>? conversationHistory,
   }) async {
     try {
-      // Build conversation context
       final List<OpenAIChatCompletionChoiceMessageModel> messages = [
         OpenAIChatCompletionChoiceMessageModel(
           content: [
@@ -30,10 +29,8 @@ class OpenAIService {
         ),
       ];
 
-      // Add conversation history if available
       if (conversationHistory != null && conversationHistory.isNotEmpty) {
         for (var msg in conversationHistory.take(10)) {
-          // Limit history to last 10 messages
           messages.add(
             OpenAIChatCompletionChoiceMessageModel(
               content: [
@@ -49,7 +46,6 @@ class OpenAIService {
         }
       }
 
-      // Add current message
       messages.add(
         OpenAIChatCompletionChoiceMessageModel(
           content: [
@@ -59,7 +55,6 @@ class OpenAIService {
         ),
       );
 
-      // Get response from OpenAI
       final chatCompletion = await OpenAI.instance.chat.create(
         model: "gpt-3.5-turbo",
         messages: messages,
@@ -70,8 +65,7 @@ class OpenAIService {
       return chatCompletion.choices.first.message.content?.first.text ?? 
           "I apologize, but I couldn't generate a response.";
     } catch (e) {
-      print('OpenAI Error: $e');
-      return "I'm sorry, I encountered an error. Please try again.";
+      rethrow;
     }
   }
 
@@ -80,7 +74,6 @@ class OpenAIService {
     List<Message>? conversationHistory,
   }) async* {
     try {
-      // Build conversation context (same as above)
       final List<OpenAIChatCompletionChoiceMessageModel> messages = [
         OpenAIChatCompletionChoiceMessageModel(
           content: [
@@ -118,7 +111,6 @@ class OpenAIService {
         ),
       );
 
-      // Stream response from OpenAI
       final stream = OpenAI.instance.chat.createStream(
         model: "gpt-3.5-turbo",
         messages: messages,
@@ -137,7 +129,6 @@ class OpenAIService {
         }
       }
     } catch (e) {
-      print('OpenAI Stream Error: $e');
       yield "I'm sorry, I encountered an error. Please try again.";
     }
   }

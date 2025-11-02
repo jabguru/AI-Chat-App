@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ai_chat_app/providers/loading_provider.dart';
-import 'package:ai_chat_app/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/loading_provider.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
 
 class LoadingOverlay extends ConsumerWidget {
   final Widget child;

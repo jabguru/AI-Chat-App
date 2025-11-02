@@ -1,34 +1,29 @@
-import 'package:ai_chat_app/models/chat_session.dart';
-import 'package:ai_chat_app/models/message.dart';
-import 'package:ai_chat_app/services/openai_service.dart';
-import 'package:ai_chat_app/services/supabase_service.dart';
-import 'package:ai_chat_app/services/voice_service.dart';
-import 'package:ai_chat_app/theme/colors.dart';
-import 'package:ai_chat_app/widgets/space.dart';
+import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
+import 'package:ai_chat_app/features/chat/data/models/message.dart';
+import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
+import 'package:ai_chat_app/features/chat/providers/chat_provider.dart';
+import 'package:ai_chat_app/core/widgets/loading_provider.dart';
+import 'package:ai_chat_app/shared/services/voice_service.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/loading_overlay.dart';
+import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final _supabase = SupabaseService.instance;
-  final _openai = OpenAIService.instance;
   final _voice = VoiceService.instance;
 
-  List<Message> _messages = [];
-  List<ChatSession> _chatSessions = [];
-  ChatSession? _currentSession;
-  bool _isLoading = false;
   bool _isListening = false;
   bool _isSpeaking = false;
-  String _streamingResponse = '';
 
   @override
   void initState() {
@@ -37,129 +32,43 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initializeChat() async {
-    await _loadChatSessions();
-    if (_chatSessions.isEmpty) {
-      await _createNewChat();
+    final sessions = await ref.read(chatSessionsProvider.future);
+    if (sessions.isEmpty) {
+      await ref.read(chatSessionsProvider.notifier).createSession('New Chat');
+      final newSessions = await ref.read(chatSessionsProvider.future);
+      ref.read(currentSessionProvider.notifier).setSession(newSessions.first);
     } else {
-      _currentSession = _chatSessions.first;
-      await _loadMessages();
-    }
-  }
-
-  Future<void> _loadChatSessions() async {
-    try {
-      final sessions = await _supabase.getChatSessions();
-      setState(() {
-        _chatSessions = sessions;
-      });
-    } catch (e) {
-      print('Error loading chat sessions: $e');
-    }
-  }
-
-  Future<void> _loadMessages() async {
-    if (_currentSession == null) return;
-    try {
-      final messages = await _supabase.getMessages(_currentSession!.id);
-      setState(() {
-        _messages = messages;
-      });
-      _scrollToBottom();
-    } catch (e) {
-      print('Error loading messages: $e');
+      ref.read(currentSessionProvider.notifier).setSession(sessions.first);
     }
   }
 
   Future<void> _createNewChat() async {
-    try {
-      final session = await _supabase.createChatSession('New Chat');
-      setState(() {
-        _currentSession = session;
-        _chatSessions.insert(0, session);
-        _messages = [];
-      });
-    } catch (e) {
-      print('Error creating new chat: $e');
-    }
+    await ref.read(chatSessionsProvider.notifier).createSession('New Chat');
+    final sessions = await ref.read(chatSessionsProvider.future);
+    ref.read(currentSessionProvider.notifier).setSession(sessions.first);
+    Navigator.of(context).pop();
   }
 
   Future<void> _sendMessage(String content) async {
-    if (content.trim().isEmpty || _currentSession == null) return;
+    if (content.trim().isEmpty) return;
 
-    setState(() => _isLoading = true);
+    ref.read(loadingProvider.notifier).show();
+    _messageController.clear();
 
     try {
-      // Save user message
-      final userMessage = await _supabase.saveMessage(
-        sessionId: _currentSession!.id,
-        content: content,
-        isUser: true,
-      );
-
-      setState(() {
-        _messages.add(userMessage);
-        _messageController.clear();
-      });
-      _scrollToBottom();
-
-      // Get AI response
-      _streamingResponse = '';
-      final responseStream = _openai.sendMessageStream(
-        message: content,
-        conversationHistory: _messages,
-      );
-
-      // Create a placeholder message for streaming
-      final aiMessageId = Uuid().v4();
-      final aiMessage = Message(
-        id: aiMessageId,
-        content: '',
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-
-      setState(() {
-        _messages.add(aiMessage);
-      });
-
-      await for (final chunk in responseStream) {
-        _streamingResponse += chunk;
-        setState(() {
-          final index = _messages.indexWhere((m) => m.id == aiMessageId);
-          if (index != -1) {
-            _messages[index] = Message(
-              id: aiMessageId,
-              content: _streamingResponse,
-              isUser: false,
-              timestamp: DateTime.now(),
-            );
-          }
-        });
+      final currentSession = ref.read(currentSessionProvider);
+      if (currentSession != null) {
+        await ref.read(chatMessagesProvider(currentSession.id).notifier).sendMessage(content);
         _scrollToBottom();
       }
-
-      // Save AI response to database
-      await _supabase.saveMessage(
-        sessionId: _currentSession!.id,
-        content: _streamingResponse,
-        isUser: false,
-      );
-
-      // Update chat session title if it's the first message
-      if (_messages.length == 2) {
-        final title = content.length > 30
-            ? '${content.substring(0, 30)}...'
-            : content;
-        await _supabase.updateChatSession(_currentSession!.id, title);
-        await _loadChatSessions();
-      }
     } catch (e) {
-      print('Error sending message: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending message: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      ref.read(loadingProvider.notifier).hide();
     }
   }
 
@@ -176,11 +85,12 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       );
     } catch (e) {
-      print('Error with voice input: $e');
       setState(() => _isListening = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -213,28 +123,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _selectChatSession(ChatSession session) async {
-    setState(() {
-      _currentSession = session;
-      _messages = [];
-    });
-    await _loadMessages();
-    Navigator.of(context).pop(); // Close drawer
+    ref.read(currentSessionProvider.notifier).setSession(session);
+    Navigator.of(context).pop();
   }
 
   Future<void> _deleteChat(ChatSession session) async {
-    try {
-      await _supabase.deleteChatSession(session.id);
-      await _loadChatSessions();
-      if (_currentSession?.id == session.id) {
-        if (_chatSessions.isEmpty) {
-          await _createNewChat();
-        } else {
-          _currentSession = _chatSessions.first;
-          await _loadMessages();
-        }
+    await ref.read(chatSessionsProvider.notifier).deleteSession(session.id);
+    
+    final currentSession = ref.read(currentSessionProvider);
+    if (currentSession?.id == session.id) {
+      final sessions = await ref.read(chatSessionsProvider.future);
+      if (sessions.isEmpty) {
+        await _createNewChat();
+      } else {
+        ref.read(currentSessionProvider.notifier).setSession(sessions.first);
       }
-    } catch (e) {
-      print('Error deleting chat: $e');
     }
   }
 
@@ -248,58 +151,80 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = _supabase.currentUser;
+    final user = ref.watch(authProvider);
+    final currentSession = ref.watch(currentSessionProvider);
+    final messagesAsync = currentSession != null 
+        ? ref.watch(chatMessagesProvider(currentSession.id))
+        : null;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return LoadingOverlay(
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: AppColors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: Icon(Icons.menu, color: AppColors.white),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
           ),
+          title: Text(
+            currentSession?.title ?? 'AI Chat',
+            style: TextStyle(color: AppColors.white),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.add, color: AppColors.white),
+              onPressed: _createNewChat,
+            ),
+          ],
         ),
-        title: Text(
-          _currentSession?.title ?? 'AI Chat',
-          style: TextStyle(color: AppColors.white),
+        drawer: _buildDrawer(user),
+        body: Column(
+          children: [
+            Expanded(
+              child: messagesAsync == null
+                  ? _buildEmptyState()
+                  : messagesAsync.when(
+                      data: (messages) => messages.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.builder(
+                              controller: _scrollController,
+                              padding: EdgeInsets.all(16),
+                              itemCount: messages.length,
+                              itemBuilder: (context, index) {
+                                return _buildMessageBubble(messages[index]);
+                              },
+                            ),
+                      loading: () => Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      error: (error, stack) => Center(
+                        child: Text(
+                          'Error: $error',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+            ),
+            _buildMessageInput(),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: AppColors.white),
-            onPressed: _createNewChat,
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(user),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.all(16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return _buildMessageBubble(message);
-                    },
-                  ),
-          ),
-          _buildMessageInput(),
-        ],
       ),
     );
   }
 
   Widget _buildDrawer(user) {
+    final sessionsAsync = ref.watch(chatSessionsProvider);
+    final currentSession = ref.watch(currentSessionProvider);
+
     return Drawer(
       backgroundColor: AppColors.background,
       child: SafeArea(
         child: Column(
           children: [
-            // User Profile Section
             Container(
               padding: EdgeInsets.all(20),
               child: Row(
@@ -346,7 +271,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Divider(color: AppColors.border, height: 1),
             VerticalSpacing(10),
-            // Chat History Section
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -363,62 +287,70 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             Expanded(
-              child: _chatSessions.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No chat history',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _chatSessions.length,
-                      itemBuilder: (context, index) {
-                        final session = _chatSessions[index];
-                        final isSelected = session.id == _currentSession?.id;
-                        return Container(
-                          margin: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary.withOpacity(0.1)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ListTile(
-                            dense: true,
-                            leading: Icon(
-                              Icons.chat_bubble_outline,
+              child: sessionsAsync.when(
+                data: (sessions) => sessions.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No chat history',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: sessions.length,
+                        itemBuilder: (context, index) {
+                          final session = sessions[index];
+                          final isSelected = session.id == currentSession?.id;
+                          return Container(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                              size: 20,
+                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            title: Text(
-                              session.title,
-                              style: TextStyle(
+                            child: ListTile(
+                              dense: true,
+                              leading: Icon(
+                                Icons.chat_bubble_outline,
                                 color: isSelected
-                                    ? AppColors.white
+                                    ? AppColors.primary
                                     : AppColors.textSecondary,
-                                fontSize: 14,
+                                size: 20,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                color: AppColors.textSecondary,
-                                size: 18,
+                              title: Text(
+                                session.title,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              onPressed: () => _deleteChat(session),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: AppColors.textSecondary,
+                                  size: 18,
+                                ),
+                                onPressed: () => _deleteChat(session),
+                              ),
+                              onTap: () => _selectChatSession(session),
                             ),
-                            onTap: () => _selectChatSession(session),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+                loading: () => Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+                error: (error, stack) => Center(
+                  child: Text('Error loading sessions'),
+                ),
+              ),
             ),
             Divider(color: AppColors.border, height: 1),
             ListTile(
@@ -428,7 +360,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 style: TextStyle(color: AppColors.white),
               ),
               onTap: () async {
-                await _supabase.signOut();
+                await ref.read(authProvider.notifier).signOut();
                 if (mounted) {
                   Navigator.of(context).pushReplacementNamed('/welcome');
                 }
@@ -448,7 +380,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Icon(
             Icons.chat_bubble_outline,
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.3),
+            color: AppColors.textSecondary.withValues(alpha: 0.3),
           ),
           VerticalSpacing(16),
           Text(
@@ -491,7 +423,7 @@ class _ChatScreenState extends State<ChatScreen> {
               decoration: BoxDecoration(
                 color: message.isUser
                     ? AppColors.primary
-                    : AppColors.border.withOpacity(0.5),
+                    : AppColors.border.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -550,7 +482,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.border.withOpacity(0.3),
+                  color: AppColors.border.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(
@@ -575,7 +507,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 decoration: BoxDecoration(
                   color: _isListening
                       ? Colors.red
-                      : AppColors.border.withOpacity(0.3),
+                      : AppColors.border.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -587,32 +519,18 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             HorizontalSpacing(8),
             GestureDetector(
-              onTap: _isLoading
-                  ? null
-                  : () => _sendMessage(_messageController.text),
+              onTap: () => _sendMessage(_messageController.text),
               child: Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _isLoading
-                      ? AppColors.textSecondary
-                      : AppColors.primary,
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: _isLoading
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation(AppColors.white),
-                        ),
-                      )
-                    : Icon(
-                        Icons.send,
-                        color: AppColors.background,
-                        size: 24,
-                      ),
+                child: Icon(
+                  Icons.send,
+                  color: AppColors.background,
+                  size: 24,
+                ),
               ),
             ),
           ],

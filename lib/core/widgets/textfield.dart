@@ -1,6 +1,6 @@
-import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
-import 'package:ai_chat_app/global/util/extensions/text_style_extension.dart';
-import 'package:ai_chat_app/theme/colors.dart';
+import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
+import 'package:ai_chat_app/core/utils/extensions/text_style_extension.dart';
+import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:flutter/material.dart';
 
 class AppTextField extends StatelessWidget {
