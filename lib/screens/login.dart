@@ -3,28 +3,29 @@ import 'package:ai_chat_app/global/util/extensions/text_style_extension.dart';
 import 'package:ai_chat_app/global/util/validators.dart';
 import 'package:ai_chat_app/screens/create_account.dart';
 import 'package:ai_chat_app/screens/chat_screen.dart';
-import 'package:ai_chat_app/services/supabase_service.dart';
+import 'package:ai_chat_app/providers/auth_provider.dart';
+import 'package:ai_chat_app/providers/loading_provider.dart';
 import 'package:ai_chat_app/theme/colors.dart';
 import 'package:ai_chat_app/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/widgets/button.dart';
+import 'package:ai_chat_app/widgets/loading_overlay.dart';
 import 'package:ai_chat_app/widgets/password_field.dart';
 import 'package:ai_chat_app/widgets/space.dart';
 import 'package:ai_chat_app/widgets/textfield.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final _supabase = SupabaseService.instance;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -34,12 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    setState(() => _isLoading = true);
+    ref.read(loadingProvider.notifier).show();
 
     try {
-      await _supabase.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      await ref.read(authProvider.notifier).signIn(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
       if (mounted) {
@@ -57,15 +58,16 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      ref.read(loadingProvider.notifier).hide();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
+    final isLoading = ref.watch(loadingProvider);
+
+    return LoadingOverlay(
+      child: AppScaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: context.bottomViewInset),
@@ -104,8 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ]),
               builder: (context, child) {
                 return AppButton(
-                  text: _isLoading ? 'Logging in...' : 'Log In',
-                  isDisabled: _isLoading ||
+                  text: 'Log In',
+                  isDisabled: isLoading ||
                       Validators.emailValidator(_emailController.text) !=
                           null ||
                       Validators.emptyValidator(_passwordController.text) !=
@@ -137,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

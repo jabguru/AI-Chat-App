@@ -2,31 +2,32 @@ import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
 import 'package:ai_chat_app/global/util/validators.dart';
 import 'package:ai_chat_app/screens/login.dart';
 import 'package:ai_chat_app/screens/chat_screen.dart';
-import 'package:ai_chat_app/services/supabase_service.dart';
+import 'package:ai_chat_app/providers/auth_provider.dart';
+import 'package:ai_chat_app/providers/loading_provider.dart';
 import 'package:ai_chat_app/theme/colors.dart';
 import 'package:ai_chat_app/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/widgets/button.dart';
 import 'package:ai_chat_app/widgets/checkbox.dart';
+import 'package:ai_chat_app/widgets/loading_overlay.dart';
 import 'package:ai_chat_app/widgets/password_field.dart';
 import 'package:ai_chat_app/widgets/space.dart';
 import 'package:ai_chat_app/widgets/textfield.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CreateAccountScreen extends StatefulWidget {
+class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  ConsumerState<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
-class _CreateAccountScreenState extends State<CreateAccountScreen> {
+class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   bool _agreed = false;
-  bool _isLoading = false;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final _supabase = SupabaseService.instance;
 
   @override
   void dispose() {
@@ -36,12 +37,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Future<void> _handleSignUp() async {
-    setState(() => _isLoading = true);
+    ref.read(loadingProvider.notifier).show();
 
     try {
-      await _supabase.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      await ref.read(authProvider.notifier).signUp(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
       if (mounted) {
@@ -59,15 +60,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      ref.read(loadingProvider.notifier).hide();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
+    final isLoading = ref.watch(loadingProvider);
+
+    return LoadingOverlay(
+      child: AppScaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: context.bottomViewInset),
@@ -144,8 +146,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ]),
               builder: (context, child) {
                 return AppButton(
-                  text: _isLoading ? 'Creating account...' : 'Continue',
-                  isDisabled: _isLoading ||
+                  text: 'Continue',
+                  isDisabled: isLoading ||
                       !_agreed ||
                       Validators.emailValidator(_emailController.text) !=
                           null ||
@@ -176,6 +178,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }
