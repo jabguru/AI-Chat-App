@@ -2,6 +2,8 @@ import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
 import 'package:ai_chat_app/global/util/extensions/text_style_extension.dart';
 import 'package:ai_chat_app/global/util/validators.dart';
 import 'package:ai_chat_app/screens/create_account.dart';
+import 'package:ai_chat_app/screens/chat_screen.dart';
+import 'package:ai_chat_app/services/supabase_service.dart';
 import 'package:ai_chat_app/theme/colors.dart';
 import 'package:ai_chat_app/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/widgets/button.dart';
@@ -21,11 +23,44 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final _supabase = SupabaseService.instance;
+  bool _isLoading = false;
 
   @override
   void dispose() {
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await _supabase.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => ChatScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -69,13 +104,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ]),
               builder: (context, child) {
                 return AppButton(
-                  text: 'Log In',
-                  isDisabled:
+                  text: _isLoading ? 'Logging in...' : 'Log In',
+                  isDisabled: _isLoading ||
                       Validators.emailValidator(_emailController.text) !=
                           null ||
                       Validators.emptyValidator(_passwordController.text) !=
                           null,
-                  onTap: () {},
+                  onTap: _handleLogin,
                 );
               },
             ),

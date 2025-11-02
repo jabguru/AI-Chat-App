@@ -1,6 +1,8 @@
 import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
 import 'package:ai_chat_app/global/util/validators.dart';
 import 'package:ai_chat_app/screens/login.dart';
+import 'package:ai_chat_app/screens/chat_screen.dart';
+import 'package:ai_chat_app/services/supabase_service.dart';
 import 'package:ai_chat_app/theme/colors.dart';
 import 'package:ai_chat_app/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/widgets/button.dart';
@@ -20,15 +22,47 @@ class CreateAccountScreen extends StatefulWidget {
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
   bool _agreed = false;
+  bool _isLoading = false;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final _supabase = SupabaseService.instance;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSignUp() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await _supabase.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => ChatScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign up failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -110,14 +144,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ]),
               builder: (context, child) {
                 return AppButton(
-                  text: 'Continue',
-                  isDisabled:
+                  text: _isLoading ? 'Creating account...' : 'Continue',
+                  isDisabled: _isLoading ||
                       !_agreed ||
                       Validators.emailValidator(_emailController.text) !=
                           null ||
                       Validators.passwordValidator(_passwordController.text) !=
                           null,
-                  onTap: () {},
+                  onTap: _handleSignUp,
                 );
               },
             ),
