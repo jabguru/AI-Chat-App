@@ -1,3 +1,4 @@
+import 'package:ai_chat_app/screens/auth_wrapper.dart';
 import 'package:ai_chat_app/screens/welcome.dart';
 import 'package:ai_chat_app/screens/chat_screen.dart';
 import 'package:ai_chat_app/services/supabase_service.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Ai Chat App',
       theme: AppTheme.themeData,
-      home: WelcomeScreen(),
+      home: AuthWrapper(),
       routes: {
         '/welcome': (context) => WelcomeScreen(),
         '/chat': (context) => ChatScreen(),

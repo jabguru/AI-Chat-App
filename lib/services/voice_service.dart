@@ -72,7 +72,7 @@ class VoiceService {
       },
       listenFor: Duration(seconds: 30),
       pauseFor: Duration(seconds: 3),
-      partialResults: false,
+      listenOptions: SpeechListenOptions(partialResults: false),
     );
   }
 
