@@ -1,6 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class VoiceService {
   static VoiceService? _instance;
@@ -44,8 +46,8 @@ class VoiceService {
 
   Future<bool> initializeSpeechRecognition() async {
     return await _speechToText.initialize(
-      onError: (error) => print('Speech recognition error: $error'),
-      onStatus: (status) => print('Speech recognition status: $status'),
+      onError: (error) => log('Speech recognition error: $error'),
+      onStatus: (status) => log('Speech recognition status: $status'),
     );
   }
 

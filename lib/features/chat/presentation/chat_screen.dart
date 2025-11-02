@@ -1,12 +1,11 @@
+import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/loading_provider.dart';
+import 'package:ai_chat_app/core/widgets/space.dart';
+import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
 import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
 import 'package:ai_chat_app/features/chat/data/models/message.dart';
-import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
 import 'package:ai_chat_app/features/chat/providers/chat_provider.dart';
-import 'package:ai_chat_app/core/widgets/loading_provider.dart';
 import 'package:ai_chat_app/shared/services/voice_service.dart';
-import 'package:ai_chat_app/core/theme/colors.dart';
-import 'package:ai_chat_app/core/widgets/loading_overlay.dart';
-import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +45,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await ref.read(chatSessionsProvider.notifier).createSession('New Chat');
     final sessions = await ref.read(chatSessionsProvider.future);
     ref.read(currentSessionProvider.notifier).setSession(sessions.first);
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _sendMessage(String content) async {
@@ -58,14 +57,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final currentSession = ref.read(currentSessionProvider);
       if (currentSession != null) {
-        await ref.read(chatMessagesProvider(currentSession.id).notifier).sendMessage(content);
+        await ref
+            .read(chatMessagesProvider(currentSession.id).notifier)
+            .sendMessage(content);
         _scrollToBottom();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       ref.read(loadingProvider.notifier).hide();
@@ -87,9 +88,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       setState(() => _isListening = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -129,7 +130,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _deleteChat(ChatSession session) async {
     await ref.read(chatSessionsProvider.notifier).deleteSession(session.id);
-    
+
     final currentSession = ref.read(currentSessionProvider);
     if (currentSession?.id == session.id) {
       final sessions = await ref.read(chatSessionsProvider.future);
@@ -153,65 +154,63 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final currentSession = ref.watch(currentSessionProvider);
-    final messagesAsync = currentSession != null 
+    final messagesAsync = currentSession != null
         ? ref.watch(chatMessagesProvider(currentSession.id))
         : null;
 
-    return LoadingOverlay(
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          leading: Builder(
-            builder: (context) => IconButton(
-              icon: Icon(Icons.menu, color: AppColors.white),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: AppColors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
-          title: Text(
-            currentSession?.title ?? 'AI Chat',
-            style: TextStyle(color: AppColors.white),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.add, color: AppColors.white),
-              onPressed: _createNewChat,
-            ),
-          ],
         ),
-        drawer: _buildDrawer(user),
-        body: Column(
-          children: [
-            Expanded(
-              child: messagesAsync == null
-                  ? _buildEmptyState()
-                  : messagesAsync.when(
-                      data: (messages) => messages.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: EdgeInsets.all(16),
-                              itemCount: messages.length,
-                              itemBuilder: (context, index) {
-                                return _buildMessageBubble(messages[index]);
-                              },
-                            ),
-                      loading: () => Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      error: (error, stack) => Center(
-                        child: Text(
-                          'Error: $error',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
+        title: Text(
+          currentSession?.title ?? 'AI Chat',
+          style: TextStyle(color: AppColors.white),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add, color: AppColors.white),
+            onPressed: _createNewChat,
+          ),
+        ],
+      ),
+      drawer: _buildDrawer(user),
+      body: Column(
+        children: [
+          Expanded(
+            child: messagesAsync == null
+                ? _buildEmptyState()
+                : messagesAsync.when(
+                    data: (messages) => messages.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.all(16),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              return _buildMessageBubble(messages[index]);
+                            },
+                          ),
+                    loading: () => Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
                       ),
                     ),
-            ),
-            _buildMessageInput(),
-          ],
-        ),
+                    error: (error, stack) => Center(
+                      child: Text(
+                        'Error: $error',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+          ),
+          _buildMessageInput(),
+        ],
       ),
     );
   }
@@ -347,18 +346,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 loading: () => Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
-                error: (error, stack) => Center(
-                  child: Text('Error loading sessions'),
-                ),
+                error: (error, stack) =>
+                    Center(child: Text('Error loading sessions')),
               ),
             ),
             Divider(color: AppColors.border, height: 1),
             ListTile(
               leading: Icon(Icons.logout, color: AppColors.textSecondary),
-              title: Text(
-                'Sign Out',
-                style: TextStyle(color: AppColors.white),
-              ),
+              title: Text('Sign Out', style: TextStyle(color: AppColors.white)),
               onTap: () async {
                 await ref.read(authProvider.notifier).signOut();
                 if (mounted) {
@@ -394,10 +389,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           VerticalSpacing(8),
           Text(
             'Send a message to begin chatting with AI',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -471,9 +463,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.background,
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: SafeArea(
         child: Row(
@@ -526,11 +516,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.send,
-                  color: AppColors.background,
-                  size: 24,
-                ),
+                child: Icon(Icons.send, color: AppColors.background, size: 24),
               ),
             ),
           ],

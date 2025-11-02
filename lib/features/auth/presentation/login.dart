@@ -1,17 +1,16 @@
+import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
 import 'package:ai_chat_app/core/utils/extensions/text_style_extension.dart';
 import 'package:ai_chat_app/core/utils/validators.dart';
-import 'package:ai_chat_app/features/auth/presentation/create_account.dart';
-import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
-import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
-import 'package:ai_chat_app/core/widgets/loading_provider.dart';
-import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:ai_chat_app/core/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/core/widgets/button.dart';
-import 'package:ai_chat_app/core/widgets/loading_overlay.dart';
+import 'package:ai_chat_app/core/widgets/loading_provider.dart';
 import 'package:ai_chat_app/core/widgets/password_field.dart';
 import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:ai_chat_app/core/widgets/textfield.dart';
+import 'package:ai_chat_app/features/auth/presentation/create_account.dart';
+import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
+import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,15 +37,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.read(loadingProvider.notifier).show();
 
     try {
-      await ref.read(authProvider.notifier).signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .signIn(_emailController.text.trim(), _passwordController.text);
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => ChatScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => ChatScreen()));
       }
     } catch (e) {
       if (mounted) {
@@ -64,10 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(loadingProvider);
-
-    return LoadingOverlay(
-      child: AppScaffold(
+    return AppScaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: context.bottomViewInset),
@@ -105,9 +100,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 _passwordController,
               ]),
               builder: (context, child) {
+                final isLoading = ref.watch(loadingProvider);
                 return AppButton(
                   text: 'Log In',
-                  isDisabled: isLoading ||
+                  isDisabled:
+                      isLoading ||
                       Validators.emailValidator(_emailController.text) !=
                           null ||
                       Validators.emptyValidator(_passwordController.text) !=
@@ -139,7 +136,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
         ),
       ),
-    ),
     );
   }
 }

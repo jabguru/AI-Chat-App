@@ -1,7 +1,6 @@
 import 'package:ai_chat_app/core/theme/theme.dart';
+import 'package:ai_chat_app/core/widgets/loading_overlay.dart';
 import 'package:ai_chat_app/features/auth/presentation/auth_wrapper.dart';
-import 'package:ai_chat_app/features/auth/presentation/welcome.dart';
-import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
 import 'package:ai_chat_app/shared/services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,11 +24,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Ai Chat App',
       theme: AppTheme.themeData,
-      home: AuthWrapper(),
-      routes: {
-        '/welcome': (context) => WelcomeScreen(),
-        '/chat': (context) => ChatScreen(),
-      },
+      home: LoadingOverlay(child: AuthWrapper()),
     );
   }
 }
