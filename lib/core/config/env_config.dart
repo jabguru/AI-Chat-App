@@ -1,18 +1,9 @@
-class EnvConfig {
-  // Supabase Configuration
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'YOUR_SUPABASE_URL_HERE',
-  );
-  
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'YOUR_SUPABASE_ANON_KEY_HERE',
-  );
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-  // OpenAI Configuration
-  static const String openAiApiKey = String.fromEnvironment(
-    'OPENAI_API_KEY',
-    defaultValue: 'YOUR_OPENAI_API_KEY_HERE',
-  );
+class EnvConfig {
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  
+  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  static String get openAiApiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
 }
