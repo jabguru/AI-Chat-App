@@ -15,16 +15,18 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Ai Chat App',
-      theme: AppTheme.themeData,
-      home: LoadingOverlay(child: AuthWrapper()),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return LoadingOverlay(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Ai Chat App',
+        theme: AppTheme.themeData,
+        home: AuthWrapper(),
+      ),
     );
   }
 }
