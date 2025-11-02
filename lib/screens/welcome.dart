@@ -1,5 +1,7 @@
 import 'package:ai_chat_app/gen/assets.gen.dart';
 import 'package:ai_chat_app/global/util/extensions/context_extension.dart';
+import 'package:ai_chat_app/screens/create_account.dart';
+import 'package:ai_chat_app/screens/login.dart';
 import 'package:ai_chat_app/theme/colors.dart';
 import 'package:ai_chat_app/widgets/button.dart';
 import 'package:ai_chat_app/widgets/space.dart';
@@ -63,9 +65,20 @@ class WelcomeScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   VerticalSpacing(23.0),
-                  AppButton(text: 'Log In'),
+                  AppButton(
+                    text: 'Log In',
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => LoginScreen())),
+                  ),
                   VerticalSpacing(16.0),
-                  AppButton(text: 'Create Account', isOutline: true),
+                  AppButton(
+                    text: 'Create Account',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CreateAccountScreen()),
+                    ),
+                    isOutline: true,
+                  ),
                   VerticalSpacing(12.0),
                 ],
               ),

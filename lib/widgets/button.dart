@@ -9,28 +9,34 @@ class AppButton extends StatelessWidget {
     required this.text,
     this.onTap,
     this.isOutline = false,
+    this.isDisabled = false,
     super.key,
   });
   final String text;
   final VoidCallback? onTap;
   final bool isOutline;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: CustomContainer(
-        color: isOutline ? Colors.transparent : AppColors.primary,
-        vPadding: 14.0,
-        hPadding: 24.0,
-        width: double.infinity,
-        circularBorderRadius: 15.0,
-        border: isOutline ? Border.all(color: AppColors.primary) : null,
-        child: Center(
-          child: Text(
-            text,
-            style: context.textTheme.bodyLarge.header.w700.c(
-              isOutline ? AppColors.primary : AppColors.background,
+      onTap: isDisabled ? null : onTap,
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 300),
+        opacity: isDisabled ? 0.2 : 1.0,
+        child: CustomContainer(
+          color: isOutline ? Colors.transparent : AppColors.primary,
+          vPadding: 14.0,
+          hPadding: 24.0,
+          width: double.infinity,
+          circularBorderRadius: 15.0,
+          border: isOutline ? Border.all(color: AppColors.primary) : null,
+          child: Center(
+            child: Text(
+              text,
+              style: context.textTheme.bodyLarge.header.w700.c(
+                isOutline ? AppColors.primary : AppColors.background,
+              ),
             ),
           ),
         ),

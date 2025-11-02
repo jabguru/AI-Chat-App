@@ -39,8 +39,16 @@ class $AssetsImagesIconsGen {
   SvgGenImage get arrowLeft =>
       const SvgGenImage('assets/images/icons/arrow-left.svg');
 
+  /// File path: assets/images/icons/password-off.svg
+  SvgGenImage get passwordOff =>
+      const SvgGenImage('assets/images/icons/password-off.svg');
+
+  /// File path: assets/images/icons/password-on.svg
+  SvgGenImage get passwordOn =>
+      const SvgGenImage('assets/images/icons/password-on.svg');
+
   /// List of all assets
-  List<SvgGenImage> get values => [arrowLeft];
+  List<SvgGenImage> get values => [arrowLeft, passwordOff, passwordOn];
 }
 
 class Assets {
