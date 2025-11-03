@@ -121,12 +121,31 @@ Add the following to your `ios/Runner/Info.plist`:
 
 ### 7. Android Specific Setup (for voice features)
 
-Add the following to your `android/app/src/main/AndroidManifest.xml`:
+Add the following permissions to your `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.BLUETOOTH"/>
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 ```
+
+Also add this inside the `<queries>` section (or create it if it doesn't exist):
+
+```xml
+<queries>
+    <intent>
+        <action android:name="android.intent.action.PROCESS_TEXT"/>
+        <data android:mimeType="text/plain"/>
+    </intent>
+    <intent>
+        <action android:name="android.speech.RecognitionService"/>
+    </intent>
+</queries>
+```
+
+**Note**: The Bluetooth permissions are required by the `speech_to_text` package for certain devices. The `RecognitionService` query is required for Android 11+ to discover speech recognition services.
 
 ### 8. Generate Riverpod Code
 
@@ -137,8 +156,6 @@ dart run build_runner build --delete-conflicting-outputs
 ```
 
 ### 9. Run the App
-
-### 7. Run the App
 
 ```bash
 flutter run
@@ -232,8 +249,32 @@ AIServiceFactory.switchTo(AIProvider.groq);
 
 ### Voice Features Not Working
 
-- Ensure microphone permissions are granted
+#### General Issues
+
+- Ensure microphone permissions are granted in device settings
 - Check that the correct permissions are added to Info.plist (iOS) or AndroidManifest.xml (Android)
+
+#### Android Specific
+
+- Make sure all Bluetooth permissions are added (required by speech_to_text package)
+- Verify the `RecognitionService` query intent is added to AndroidManifest.xml (required for Android 11+)
+- If speech recognition fails, try testing on a physical device instead of an emulator
+- Check that Google app or other speech recognition service is installed and up-to-date
+- **Text-to-Speech (TTS)**: If you don't hear any voice output on emulator:
+  1. Open emulator's **Settings** > **System** > **Languages & input** > **Text-to-speech output**
+  2. Select **Google Text-to-Speech Engine** as preferred engine
+  3. Install voice data if prompted, or install "Google Text-to-Speech" from Play Store
+  4. Restart your app after configuring TTS
+
+#### iOS Specific
+
+- Ensure both microphone and speech recognition permissions are in Info.plist
+- **Text-to-Speech (TTS)**: If you don't hear any voice output, you need to download a voice:
+  1. Open iOS **Settings** > **Accessibility** > **Spoken Content** > **Voices**
+  2. Select **English** and download a voice (e.g., "Samantha" or "Alex")
+  3. Restart your app after downloading the voice
+- **Speech-to-Text (STT)**: Does **not work on iOS Simulator** - you must use a physical iPhone/iPad device
+- For best results with voice features, always test on a physical device
 
 ### Build Runner Issues
 
