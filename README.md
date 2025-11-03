@@ -1,16 +1,17 @@
 # AI Chat App
 
-A beautiful Flutter AI chat application with voice support, powered by OpenAI and Supabase.
+A beautiful Flutter AI chat application with voice support, powered by Groq/OpenAI and Supabase.
 
 ## Features
 
-- 🤖 **AI Conversations**: Chat with OpenAI's GPT-3.5 Turbo
+- 🤖 **AI Conversations**: Chat with Groq (free) or OpenAI's GPT-3.5 Turbo
 - 🎤 **Voice Input**: Speak your messages using speech-to-text
 - 🔊 **Voice Output**: Listen to AI responses with text-to-speech
 - 💬 **Chat History**: View and manage your conversation history
 - 🔐 **Authentication**: Secure email/password authentication with Supabase
 - 🎨 **Beautiful UI**: Clean, modern interface with dark theme
 - 📱 **Real-time Streaming**: See AI responses as they're generated
+- 🔄 **Flexible AI Providers**: Easy switching between Groq and OpenAI
 
 ## Screenshots
 
@@ -19,18 +20,24 @@ _(Add screenshots here)_
 ## Tech Stack
 
 - **Frontend**: Flutter
+- **State Management**: Riverpod (with code generation)
 - **Backend**: Supabase (Authentication & Database)
-- **AI**: OpenAI GPT-3.5 Turbo
+- **AI Providers**:
+  - Groq (Qwen 3 32B - Free)
+  - OpenAI GPT-3.5 Turbo (Paid)
 - **Voice**:
   - `speech_to_text` for voice input
   - `flutter_tts` for text-to-speech
+- **Environment**: `flutter_dotenv` for secure API key management
 
 ## Prerequisites
 
 - Flutter SDK (3.9.2 or higher)
 - Dart SDK
 - Supabase Account ([Sign up here](https://supabase.com))
-- OpenAI API Key ([Get one here](https://platform.openai.com/api-keys))
+- AI Provider API Key (choose one):
+  - Groq API Key ([Get free key here](https://console.groq.com))
+  - OpenAI API Key ([Get one here](https://platform.openai.com/api-keys))
 
 ## Setup Instructions
 
@@ -75,17 +82,33 @@ flutter pub get
 
 ### 4. Configure Environment Variables
 
-Update the configuration in `lib/config/env_config.dart`:
+Create a `.env` file in the root of the project:
 
-```dart
-class EnvConfig {
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-  static const String openAiApiKey = 'YOUR_OPENAI_API_KEY';
-}
+```env
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
-### 5. iOS Specific Setup (for voice features)
+**Note**: You only need to fill in the API key for the AI provider you want to use. Leave the other blank.
+
+### 5. Switch Between AI Providers (Optional)
+
+By default, the app uses Groq (free). To switch to OpenAI:
+
+1. Open `lib/shared/services/ai_service_factory.dart`
+2. Change the `currentProvider` line:
+
+```dart
+// Use Groq (default)
+static AIProvider currentProvider = AIProvider.groq;
+
+// Or use OpenAI
+static AIProvider currentProvider = AIProvider.openai;
+```
+
+### 6. iOS Specific Setup (for voice features)
 
 Add the following to your `ios/Runner/Info.plist`:
 
@@ -96,7 +119,7 @@ Add the following to your `ios/Runner/Info.plist`:
 <string>This app needs access to speech recognition for voice input.</string>
 ```
 
-### 6. Android Specific Setup (for voice features)
+### 7. Android Specific Setup (for voice features)
 
 Add the following to your `android/app/src/main/AndroidManifest.xml`:
 
@@ -104,6 +127,16 @@ Add the following to your `android/app/src/main/AndroidManifest.xml`:
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 <uses-permission android:name="android.permission.INTERNET" />
 ```
+
+### 8. Generate Riverpod Code
+
+Run the code generator to generate Riverpod providers:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+### 9. Run the App
 
 ### 7. Run the App
 
@@ -114,36 +147,110 @@ flutter run
 ## Usage
 
 1. **Sign Up/Login**: Create an account or log in with your email and password
-2. **Start Chatting**: Type a message or tap the microphone icon to speak
-3. **Listen to Responses**: Tap the speaker icon on AI messages to hear them read aloud
-4. **View History**: Open the drawer (tap the menu icon) to see all your chat sessions
-5. **New Chat**: Tap the + icon in the app bar to start a new conversation
+2. **Verify Email**: Check your email for verification link (required before chatting)
+3. **Start Chatting**: Type a message or tap the microphone icon to speak
+4. **Listen to Responses**: Tap the speaker icon on AI messages to hear them read aloud
+5. **View History**: Open the drawer (tap the menu icon) to see all your chat sessions
+6. **New Chat**: Tap the + icon in the app bar to start a new conversation
+7. **Delete Chats**: Tap the delete icon next to any chat in the history drawer
+
+## AI Provider Comparison
+
+## AI Provider Comparison
+
+| Feature   | Groq (Default) | OpenAI                     |
+| --------- | -------------- | -------------------------- |
+| Cost      | **Free**       | Paid (requires $5 minimum) |
+| Model     | Qwen 3 32B     | GPT-3.5 Turbo              |
+| Speed     | Very Fast      | Fast                       |
+| Streaming | Simulated      | Real-time                  |
+| Quality   | Excellent      | Excellent                  |
 
 ## Project Structure
 
 ```
 lib/
-├── config/
-│   └── env_config.dart          # Environment configuration
-├── models/
-│   ├── message.dart             # Message model
-│   └── chat_session.dart        # Chat session model
-├── screens/
-│   ├── welcome.dart             # Welcome screen
-│   ├── login.dart               # Login screen
-│   ├── create_account.dart      # Sign up screen
-│   └── chat_screen.dart         # Main chat interface
-├── services/
-│   ├── supabase_service.dart    # Supabase integration
-│   ├── openai_service.dart      # OpenAI integration
-│   └── voice_service.dart       # Voice input/output
-├── theme/
-│   ├── colors.dart              # App colors
-│   └── theme.dart               # Theme configuration
-├── widgets/
-│   └── ...                      # Reusable widgets
-└── main.dart                    # App entry point
+├── core/
+│   ├── config/
+│   │   └── env_config.dart          # Environment configuration
+│   ├── theme/
+│   │   ├── colors.dart              # App colors
+│   │   └── theme.dart               # Theme configuration
+│   └── widgets/
+│       └── ...                      # Reusable widgets
+├── features/
+│   ├── auth/
+│   │   ├── data/
+│   │   ├── presentation/
+│   │   └── providers/               # Auth state management
+│   └── chat/
+│       ├── data/
+│       │   └── models/              # Message & ChatSession models
+│       ├── presentation/
+│       │   └── chat_screen.dart     # Main chat UI
+│       └── providers/
+│           └── chat_provider.dart   # Chat state management
+├── shared/
+│   └── services/
+│       ├── ai_service.dart          # AI service interface
+│       ├── ai_service_factory.dart  # Provider switching logic
+│       ├── openai_service.dart      # OpenAI implementation
+│       ├── groq_service.dart        # Groq implementation
+│       ├── supabase_service.dart    # Supabase integration
+│       └── voice_service.dart       # Voice input/output
+└── main.dart                        # App entry point
 ```
+
+## How to Switch AI Providers
+
+The app uses an abstraction layer that makes it easy to switch between AI providers:
+
+### Option 1: Change Default Provider
+
+Edit `lib/shared/services/ai_service_factory.dart`:
+
+```dart
+static AIProvider currentProvider = AIProvider.groq;  // or AIProvider.openai
+```
+
+### Option 2: Runtime Switching (Advanced)
+
+You can programmatically switch providers:
+
+```dart
+AIServiceFactory.switchTo(AIProvider.openai);
+// or
+AIServiceFactory.switchTo(AIProvider.groq);
+```
+
+## Troubleshooting
+
+### Email Verification Issues
+
+- Check your spam folder for the verification email
+- Make sure email confirmation is enabled in your Supabase project settings
+
+### Voice Features Not Working
+
+- Ensure microphone permissions are granted
+- Check that the correct permissions are added to Info.plist (iOS) or AndroidManifest.xml (Android)
+
+### Build Runner Issues
+
+If code generation fails, try:
+
+```bash
+flutter clean
+flutter pub get
+dart run build_runner clean
+dart run build_runner build --delete-conflicting-outputs
+```
+
+### API Key Issues
+
+- Make sure your `.env` file is in the project root
+- Verify API keys are valid and have sufficient credits/quota
+- Restart the app after changing `.env` file
 
 ## Contributing
 
@@ -155,6 +262,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- OpenAI for the GPT-3.5 Turbo API
+- Design inspiration from [AI Chat Bot](https://www.figma.com/community/file/1369245876107831160)
+- Groq for providing free, fast LLM inference
 - Supabase for backend infrastructure
-- Flutter team for the amazing framework
