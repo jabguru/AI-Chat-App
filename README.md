@@ -14,14 +14,14 @@ A beautiful Flutter AI chat application with voice support, powered by OpenAI an
 
 ## Screenshots
 
-*(Add screenshots here)*
+_(Add screenshots here)_
 
 ## Tech Stack
 
 - **Frontend**: Flutter
 - **Backend**: Supabase (Authentication & Database)
 - **AI**: OpenAI GPT-3.5 Turbo
-- **Voice**: 
+- **Voice**:
   - `speech_to_text` for voice input
   - `flutter_tts` for text-to-speech
 
@@ -37,8 +37,8 @@ A beautiful Flutter AI chat application with voice support, powered by OpenAI an
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/ai_chat_app.git
-cd ai_chat_app
+git clone https://github.com/jabguru/AI-Chat-App.git
+cd AI-Chat-App
 ```
 
 ### 2. Install Dependencies
@@ -49,79 +49,29 @@ flutter pub get
 
 ### 3. Supabase Setup
 
-1. Create a new project on [Supabase](https://app.supabase.com)
-2. Go to Project Settings > API
-3. Copy your `Project URL` and `anon/public` key
-4. Create the following tables in your Supabase database:
+#### Create Project
 
-#### Chat Sessions Table
+1. Go to [supabase.com](https://supabase.com) and sign in
+2. Click "New Project"
+3. Fill in your project details
+4. Wait for the project to be created
 
-```sql
-create table chat_sessions (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
-  title text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+#### Get API Credentials
 
--- Enable RLS
-alter table chat_sessions enable row level security;
+1. In your Supabase project, go to **Settings** (gear icon)
+2. Click **API** in the sidebar
+3. Copy the following:
+   - **Project URL** (looks like: `https://xxxxx.supabase.co`)
+   - **anon/public** key (the `anon` key)
 
--- Create policies
-create policy "Users can view their own chat sessions"
-  on chat_sessions for select
-  using (auth.uid() = user_id);
+#### Setup Database
 
-create policy "Users can create their own chat sessions"
-  on chat_sessions for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update their own chat sessions"
-  on chat_sessions for update
-  using (auth.uid() = user_id);
-
-create policy "Users can delete their own chat sessions"
-  on chat_sessions for delete
-  using (auth.uid() = user_id);
-```
-
-#### Messages Table
-
-```sql
-create table messages (
-  id uuid default uuid_generate_v4() primary key,
-  session_id uuid references chat_sessions(id) on delete cascade not null,
-  content text not null,
-  is_user boolean not null,
-  timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
-  audio_url text
-);
-
--- Enable RLS
-alter table messages enable row level security;
-
--- Create policies
-create policy "Users can view messages from their chat sessions"
-  on messages for select
-  using (
-    exists (
-      select 1 from chat_sessions
-      where chat_sessions.id = messages.session_id
-      and chat_sessions.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can create messages in their chat sessions"
-  on messages for insert
-  with check (
-    exists (
-      select 1 from chat_sessions
-      where chat_sessions.id = messages.session_id
-      and chat_sessions.user_id = auth.uid()
-    )
-  );
-```
+1. In your Supabase project, go to **SQL Editor**
+2. Click **New Query**
+3. Copy the entire content of `supabase_schema.sql` from this project
+4. Paste it into the SQL editor
+5. Click **Run** (or press Cmd/Ctrl + Enter)
+6. You should see "Success. No rows returned" - that's good!
 
 ### 4. Configure Environment Variables
 
