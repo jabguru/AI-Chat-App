@@ -136,10 +136,10 @@ class ChatMessages extends _$ChatMessages {
             ? '${content.substring(0, 30)}...'
             : content;
         await _supabase.updateChatSession(sessionId, title);
-        
+
         // Force refresh both the sessions list and current session
         ref.invalidate(chatSessionsProvider);
-        
+
         // Update the current session with new title
         final sessions = await _supabase.getChatSessions();
         final updatedSession = sessions.firstWhere((s) => s.id == sessionId);

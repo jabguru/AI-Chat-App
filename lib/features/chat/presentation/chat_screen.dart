@@ -129,7 +129,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _deleteChat(ChatSession session) async {
     // Close drawer first
     if (mounted) Navigator.of(context).pop();
-    
+
     await ref.read(chatSessionsProvider.notifier).deleteSession(session.id);
 
     final currentSession = ref.read(currentSessionProvider);
