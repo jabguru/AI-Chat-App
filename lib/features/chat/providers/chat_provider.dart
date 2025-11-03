@@ -64,6 +64,10 @@ class ChatMessages extends _$ChatMessages {
     final sessionId = ref.read(currentSessionProvider)?.id;
     if (sessionId == null) return;
 
+    // Check if this is the first message BEFORE saving anything
+    final existingMessages = await _supabase.getMessages(sessionId);
+    final isFirstMessage = existingMessages.isEmpty;
+
     // Add user message immediately to local state
     final userMessage = Message(
       id: 'temp_user_${DateTime.now().millisecondsSinceEpoch}',
@@ -127,12 +131,19 @@ class ChatMessages extends _$ChatMessages {
       ref.invalidateSelf();
 
       // Update session title if first message
-      if (messages.isEmpty) {
+      if (isFirstMessage) {
         final title = content.length > 30
             ? '${content.substring(0, 30)}...'
             : content;
         await _supabase.updateChatSession(sessionId, title);
+        
+        // Force refresh both the sessions list and current session
         ref.invalidate(chatSessionsProvider);
+        
+        // Update the current session with new title
+        final sessions = await _supabase.getChatSessions();
+        final updatedSession = sessions.firstWhere((s) => s.id == sessionId);
+        ref.read(currentSessionProvider.notifier).setSession(updatedSession);
       }
     } catch (e) {
       // Remove typing indicator on error

@@ -127,13 +127,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _deleteChat(ChatSession session) async {
+    // Close drawer first
+    if (mounted) Navigator.of(context).pop();
+    
     await ref.read(chatSessionsProvider.notifier).deleteSession(session.id);
 
     final currentSession = ref.read(currentSessionProvider);
     if (currentSession?.id == session.id) {
       final sessions = await ref.read(chatSessionsProvider.future);
       if (sessions.isEmpty) {
-        await _createNewChat();
+        await ref.read(chatSessionsProvider.notifier).createSession('New Chat');
+        final newSessions = await ref.read(chatSessionsProvider.future);
+        ref.read(currentSessionProvider.notifier).setSession(newSessions.first);
       } else {
         ref.read(currentSessionProvider.notifier).setSession(sessions.first);
       }
