@@ -158,16 +158,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // Auto-scroll when messages update
     if (currentSession != null) {
-      ref.listen(
-        chatMessagesProvider(currentSession.id),
-        (previous, next) {
-          next.whenData((messages) {
-            if (messages.isNotEmpty) {
-              _scrollToBottom();
-            }
-          });
-        },
-      );
+      ref.listen(chatMessagesProvider(currentSession.id), (previous, next) {
+        next.whenData((messages) {
+          if (messages.isNotEmpty) {
+            _scrollToBottom();
+          }
+        });
+      });
     }
 
     return AppScaffold(
