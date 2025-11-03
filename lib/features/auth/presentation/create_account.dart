@@ -10,7 +10,6 @@ import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:ai_chat_app/core/widgets/textfield.dart';
 import 'package:ai_chat_app/features/auth/presentation/login.dart';
 import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
-import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,7 +46,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       if (mounted) {
         Navigator.of(
           context,
-        ).pushReplacement(MaterialPageRoute(builder: (_) => ChatScreen()));
+        ).pushReplacement(MaterialPageRoute(builder: (_) => LoginScreen()));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Account created! Please check your email to verify your account before logging in.',
+            ),
+            backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
