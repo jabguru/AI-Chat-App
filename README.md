@@ -15,7 +15,15 @@ A beautiful Flutter AI chat application with voice support, powered by Groq/Open
 
 ## Screenshots
 
-_(Add screenshots here)_
+<p align="center">
+  <img src="screenshots/welcome_screen.png" width="250" alt="Welcome Screen" style="margin: 10px;"/>
+  <img src="screenshots/login_screen.png" width="250" alt="Login Screen" style="margin: 10px;"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/chat_screen.png" width="250" alt="Chat Screen" style="margin: 10px;"/>
+  <img src="screenshots/chat_history.png" width="250" alt="Chat History" style="margin: 10px;"/>
+</p>
 
 ## Tech Stack
 
