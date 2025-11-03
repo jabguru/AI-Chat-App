@@ -1,4 +1,5 @@
 import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/core/widgets/loading_provider.dart';
 import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
@@ -158,8 +159,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? ref.watch(chatMessagesProvider(currentSession.id))
         : null;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
+      hasPadding: false,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         leading: Builder(

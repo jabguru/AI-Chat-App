@@ -8,6 +8,7 @@ class AppScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset,
     this.padding,
     this.backgroundColor,
+    this.drawer,
     super.key,
   });
   final Widget body;
@@ -16,6 +17,7 @@ class AppScaffold extends StatelessWidget {
   final bool? resizeToAvoidBottomInset;
   final double? padding;
   final Color? backgroundColor;
+  final Widget? drawer;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class AppScaffold extends StatelessWidget {
         appBar: appBar,
         backgroundColor: backgroundColor,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+        drawer: drawer,
         body: Padding(
           padding: hasPadding
               ? EdgeInsets.symmetric(horizontal: padding ?? 20.0)
