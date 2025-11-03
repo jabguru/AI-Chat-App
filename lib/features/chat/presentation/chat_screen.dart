@@ -45,7 +45,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await ref.read(chatSessionsProvider.notifier).createSession('New Chat');
     final sessions = await ref.read(chatSessionsProvider.future);
     ref.read(currentSessionProvider.notifier).setSession(sessions.first);
-    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _sendMessage(String content) async {
