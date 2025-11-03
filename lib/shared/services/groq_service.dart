@@ -25,6 +25,63 @@ class GroqService implements AIService {
     );
   }
 
+  String _cleanResponse(String response) {
+    // Remove <think> tags and their content
+    String cleaned = response.replaceAll(
+      RegExp(r'<think>.*?</think>', dotAll: true),
+      '',
+    );
+
+    // Remove any remaining angle bracket tags
+    cleaned = cleaned.replaceAll(RegExp(r'<[^>]+>'), '');
+
+    // Remove markdown bold (**text** or __text__)
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\*\*([^\*]+)\*\*'),
+      (match) => match.group(1)!,
+    );
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'__([^_]+)__'),
+      (match) => match.group(1)!,
+    );
+
+    // Remove markdown italic (*text* or _text_)
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\*([^\*]+)\*'),
+      (match) => match.group(1)!,
+    );
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'_([^_]+)_'),
+      (match) => match.group(1)!,
+    );
+
+    // Remove markdown code blocks (```code```)
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'```[^\n]*\n(.*?)```', dotAll: true),
+      (match) => match.group(1)!,
+    );
+
+    // Remove inline code (`code`)
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'`([^`]+)`'),
+      (match) => match.group(1)!,
+    );
+
+    // Remove markdown headers (# Header)
+    cleaned = cleaned.replaceAll(RegExp(r'^#{1,6}\s+', multiLine: true), '');
+
+    // Remove markdown links [text](url) - keep just the text
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\[([^\]]+)\]\([^\)]+\)'),
+      (match) => match.group(1)!,
+    );
+
+    // Clean up any extra whitespace
+    cleaned = cleaned.trim();
+
+    return cleaned;
+  }
+
   @override
   Future<String> sendMessage({
     required String message,
@@ -32,7 +89,8 @@ class GroqService implements AIService {
   }) async {
     try {
       final response = await _groq.sendMessage(message);
-      return response.choices.first.message.content;
+      final content = response.choices.first.message.content;
+      return _cleanResponse(content);
     } on GroqException catch (e) {
       throw Exception('Groq API Error: ${e.message}');
     } catch (e) {
