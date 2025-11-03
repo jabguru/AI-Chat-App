@@ -377,9 +377,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               leading: Icon(Icons.logout, color: AppColors.textSecondary),
               title: Text('Sign Out', style: TextStyle(color: AppColors.white)),
               onTap: () async {
+                // Close drawer first
+                Navigator.of(context).pop();
+
+                // Sign out
                 await ref.read(authProvider.notifier).signOut();
+
+                // Navigate to welcome screen
                 if (mounted) {
-                  Navigator.of(context).pushReplacementNamed('/welcome');
+                  Navigator.of(
+                    context,
+                    rootNavigator: true,
+                  ).pushReplacementNamed('/welcome');
                 }
               },
             ),

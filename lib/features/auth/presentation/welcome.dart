@@ -61,7 +61,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   VerticalSpacing(8.0),
                   Text(
-                    "Unlock Infinite Conversations: JulsAIs,\nYour AI Companion!",
+                    "Unlock Infinite Conversations: JulsAI,\nYour AI Companion!",
                     textAlign: TextAlign.center,
                   ),
                   VerticalSpacing(23.0),
