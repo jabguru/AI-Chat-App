@@ -1,8 +1,8 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
 import 'package:ai_chat_app/features/chat/data/models/message.dart';
-import 'package:ai_chat_app/shared/services/supabase_service.dart';
 import 'package:ai_chat_app/shared/services/openai_service.dart';
+import 'package:ai_chat_app/shared/services/supabase_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chat_provider.g.dart';
 
@@ -97,7 +97,7 @@ class ChatMessages extends _$ChatMessages {
     try {
       // Get messages for context
       final messages = await supabase.getMessages(sessionId);
-      
+
       // Stream AI response
       String fullResponse = '';
       await for (final chunk in openai.sendMessageStream(
@@ -105,7 +105,7 @@ class ChatMessages extends _$ChatMessages {
         conversationHistory: messages,
       )) {
         fullResponse += chunk;
-        
+
         // Remove typing indicator and update with streaming response
         _localMessages.removeLast();
         final aiMessage = Message(
@@ -130,7 +130,9 @@ class ChatMessages extends _$ChatMessages {
 
       // Update session title if first message
       if (messages.isEmpty) {
-        final title = content.length > 30 ? '${content.substring(0, 30)}...' : content;
+        final title = content.length > 30
+            ? '${content.substring(0, 30)}...'
+            : content;
         await supabase.updateChatSession(sessionId, title);
         ref.invalidate(chatSessionsProvider);
       }

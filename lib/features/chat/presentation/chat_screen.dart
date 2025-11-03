@@ -539,14 +539,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
 class _TypingDot extends StatefulWidget {
   final int delay;
-  
+
   const _TypingDot({required this.delay});
 
   @override
   State<_TypingDot> createState() => _TypingDotState();
 }
 
-class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMixin {
+class _TypingDotState extends State<_TypingDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -557,10 +558,11 @@ class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMi
       duration: Duration(milliseconds: 600),
       vsync: this,
     );
-    
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) {
