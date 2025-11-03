@@ -98,7 +98,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
             VerticalSpacing(8.0),
             Text(
-              'To begin using the chat GPT, please create an account with your email address.',
+              'To begin using the Juls AI, please create an account with your email address.',
             ),
             VerticalSpacing(32.0),
             AppTextField(
@@ -129,7 +129,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'By continuing you agree to the chat GPT ',
+                          text: 'By continuing you agree to the Juls AI ',
                         ),
                         TextSpan(
                           text: 'Term of Service ',

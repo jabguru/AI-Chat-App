@@ -79,7 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             Text('Log In', style: context.textTheme.headlineMedium),
             VerticalSpacing(8.0),
-            Text('Welcome back to chat GPT 👋'),
+            Text('Welcome back to Juls AI 👋'),
             VerticalSpacing(32.0),
             AppTextField(
               label: 'Email Address',

@@ -1,10 +1,10 @@
-import 'package:ai_chat_app/gen/assets.gen.dart';
-import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
-import 'package:ai_chat_app/features/auth/presentation/create_account.dart';
-import 'package:ai_chat_app/features/auth/presentation/login.dart';
 import 'package:ai_chat_app/core/theme/colors.dart';
+import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
 import 'package:ai_chat_app/core/widgets/button.dart';
 import 'package:ai_chat_app/core/widgets/space.dart';
+import 'package:ai_chat_app/features/auth/presentation/create_account.dart';
+import 'package:ai_chat_app/features/auth/presentation/login.dart';
+import 'package:ai_chat_app/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -45,7 +45,7 @@ class WelcomeScreen extends StatelessWidget {
                       style: context.textTheme.headlineMedium,
                       children: [
                         TextSpan(
-                          text: 'ChatGPT ',
+                          text: 'JulsAI ',
                           style: TextStyle(color: AppColors.primary),
                         ),
                         TextSpan(
@@ -61,7 +61,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   VerticalSpacing(8.0),
                   Text(
-                    "Unlock Infinite Conversations: ChatGPT,\nYour AI Companion!",
+                    "Unlock Infinite Conversations: JulsAIs,\nYour AI Companion!",
                     textAlign: TextAlign.center,
                   ),
                   VerticalSpacing(23.0),
