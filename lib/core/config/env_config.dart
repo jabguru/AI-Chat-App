@@ -6,4 +6,6 @@ class EnvConfig {
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   static String get openAiApiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
+
+  static String get groqApiKey => dotenv.env['GROQ_API_KEY'] ?? '';
 }

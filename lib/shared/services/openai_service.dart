@@ -1,18 +1,14 @@
-import 'package:dart_openai/dart_openai.dart';
 import 'package:ai_chat_app/core/config/env_config.dart';
 import 'package:ai_chat_app/features/chat/data/models/message.dart';
+import 'package:ai_chat_app/shared/services/ai_service.dart';
+import 'package:dart_openai/dart_openai.dart';
 
-class OpenAIService {
-  static OpenAIService? _instance;
-  static OpenAIService get instance {
-    _instance ??= OpenAIService._();
-    return _instance!;
-  }
-
-  OpenAIService._() {
+class OpenAIService implements AIService {
+  OpenAIService() {
     OpenAI.apiKey = EnvConfig.openAiApiKey;
   }
 
+  @override
   Future<String> sendMessage({
     required String message,
     List<Message>? conversationHistory,
@@ -62,13 +58,14 @@ class OpenAIService {
         maxTokens: 500,
       );
 
-      return chatCompletion.choices.first.message.content?.first.text ?? 
+      return chatCompletion.choices.first.message.content?.first.text ??
           "I apologize, but I couldn't generate a response.";
     } catch (e) {
       rethrow;
     }
   }
 
+  @override
   Stream<String> sendMessageStream({
     required String message,
     List<Message>? conversationHistory,

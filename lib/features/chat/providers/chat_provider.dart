@@ -1,6 +1,6 @@
 import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
 import 'package:ai_chat_app/features/chat/data/models/message.dart';
-import 'package:ai_chat_app/shared/services/openai_service.dart';
+import 'package:ai_chat_app/shared/services/ai_service_factory.dart';
 import 'package:ai_chat_app/shared/services/supabase_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -50,11 +50,12 @@ class CurrentSession extends _$CurrentSession {
 @riverpod
 class ChatMessages extends _$ChatMessages {
   List<Message> _localMessages = [];
+  late final _ai = AIServiceFactory.instance;
+  late final _supabase = SupabaseService.instance;
 
   @override
   Future<List<Message>> build(String sessionId) async {
-    final supabase = SupabaseService.instance;
-    final messages = await supabase.getMessages(sessionId);
+    final messages = await _supabase.getMessages(sessionId);
     _localMessages = List.from(messages);
     return _localMessages;
   }
@@ -62,9 +63,6 @@ class ChatMessages extends _$ChatMessages {
   Future<void> sendMessage(String content) async {
     final sessionId = ref.read(currentSessionProvider)?.id;
     if (sessionId == null) return;
-
-    final supabase = SupabaseService.instance;
-    final openai = OpenAIService.instance;
 
     // Add user message immediately to local state
     final userMessage = Message(
@@ -77,7 +75,7 @@ class ChatMessages extends _$ChatMessages {
     state = AsyncValue.data(List.from(_localMessages));
 
     // Save user message to database
-    await supabase.saveMessage(
+    await _supabase.saveMessage(
       sessionId: sessionId,
       content: content,
       isUser: true,
@@ -96,11 +94,11 @@ class ChatMessages extends _$ChatMessages {
 
     try {
       // Get messages for context
-      final messages = await supabase.getMessages(sessionId);
+      final messages = await _supabase.getMessages(sessionId);
 
       // Stream AI response
       String fullResponse = '';
-      await for (final chunk in openai.sendMessageStream(
+      await for (final chunk in _ai.sendMessageStream(
         message: content,
         conversationHistory: messages,
       )) {
@@ -119,7 +117,7 @@ class ChatMessages extends _$ChatMessages {
       }
 
       // Save final AI response to database
-      await supabase.saveMessage(
+      await _supabase.saveMessage(
         sessionId: sessionId,
         content: fullResponse,
         isUser: false,
@@ -133,7 +131,7 @@ class ChatMessages extends _$ChatMessages {
         final title = content.length > 30
             ? '${content.substring(0, 30)}...'
             : content;
-        await supabase.updateChatSession(sessionId, title);
+        await _supabase.updateChatSession(sessionId, title);
         ref.invalidate(chatSessionsProvider);
       }
     } catch (e) {
