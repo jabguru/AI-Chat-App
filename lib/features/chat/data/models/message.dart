@@ -4,6 +4,7 @@ class Message {
   final bool isUser;
   final DateTime timestamp;
   final String? audioUrl;
+  final bool isTyping;
 
   Message({
     required this.id,
@@ -11,7 +12,26 @@ class Message {
     required this.isUser,
     required this.timestamp,
     this.audioUrl,
+    this.isTyping = false,
   });
+
+  Message copyWith({
+    String? id,
+    String? content,
+    bool? isUser,
+    DateTime? timestamp,
+    String? audioUrl,
+    bool? isTyping,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      content: content ?? this.content,
+      isUser: isUser ?? this.isUser,
+      timestamp: timestamp ?? this.timestamp,
+      audioUrl: audioUrl ?? this.audioUrl,
+      isTyping: isTyping ?? this.isTyping,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {

@@ -1,6 +1,4 @@
 import 'package:ai_chat_app/core/theme/colors.dart';
-import 'package:ai_chat_app/core/widgets/app_scaffold.dart';
-import 'package:ai_chat_app/core/widgets/loading_provider.dart';
 import 'package:ai_chat_app/core/widgets/space.dart';
 import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
 import 'package:ai_chat_app/features/chat/data/models/chat_session.dart';
@@ -52,7 +50,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _sendMessage(String content) async {
     if (content.trim().isEmpty) return;
 
-    ref.read(loadingProvider.notifier).show();
     _messageController.clear();
 
     try {
@@ -69,8 +66,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
-    } finally {
-      ref.read(loadingProvider.notifier).hide();
     }
   }
 
@@ -159,9 +154,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? ref.watch(chatMessagesProvider(currentSession.id))
         : null;
 
-    return AppScaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
-      hasPadding: false,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         leading: Builder(
@@ -425,17 +419,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   bottomRight: Radius.circular(message.isUser ? 4 : 16),
                 ),
               ),
-              child: Text(
-                message.content,
-                style: TextStyle(
-                  color: message.isUser
-                      ? AppColors.background
-                      : AppColors.white,
-                  fontSize: 15,
-                ),
-              ),
+              child: message.isTyping
+                  ? _buildTypingIndicator()
+                  : Text(
+                      message.content,
+                      style: TextStyle(
+                        color: message.isUser
+                            ? AppColors.background
+                            : AppColors.white,
+                        fontSize: 15,
+                      ),
+                    ),
             ),
-            if (!message.isUser)
+            if (!message.isUser && !message.isTyping)
               Padding(
                 padding: EdgeInsets.only(top: 4),
                 child: Row(
@@ -522,6 +518,73 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _TypingDot(delay: 0),
+        SizedBox(width: 4),
+        _TypingDot(delay: 200),
+        SizedBox(width: 4),
+        _TypingDot(delay: 400),
+      ],
+    );
+  }
+}
+
+class _TypingDot extends StatefulWidget {
+  final int delay;
+  
+  const _TypingDot({required this.delay});
+
+  @override
+  State<_TypingDot> createState() => _TypingDotState();
+}
+
+class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) {
+        _controller.repeat(reverse: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _animation,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary,
+          shape: BoxShape.circle,
         ),
       ),
     );

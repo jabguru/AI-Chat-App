@@ -38,7 +38,7 @@ final currentSessionProvider =
     );
 
 typedef _$CurrentSession = AutoDisposeNotifier<ChatSession?>;
-String _$chatMessagesHash() => r'7a0af1497f3f30357fbc79c08df77c08febeeb8f';
+String _$chatMessagesHash() => r'426fddda94c7e1e6e4dba8b204a0bc29e5a2b6b5';
 
 /// Copied from Dart SDK
 class _SystemHash {

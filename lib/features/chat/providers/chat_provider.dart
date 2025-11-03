@@ -49,10 +49,14 @@ class CurrentSession extends _$CurrentSession {
 
 @riverpod
 class ChatMessages extends _$ChatMessages {
+  List<Message> _localMessages = [];
+
   @override
   Future<List<Message>> build(String sessionId) async {
     final supabase = SupabaseService.instance;
-    return await supabase.getMessages(sessionId);
+    final messages = await supabase.getMessages(sessionId);
+    _localMessages = List.from(messages);
+    return _localMessages;
   }
 
   Future<void> sendMessage(String content) async {
@@ -62,32 +66,79 @@ class ChatMessages extends _$ChatMessages {
     final supabase = SupabaseService.instance;
     final openai = OpenAIService.instance;
 
+    // Add user message immediately to local state
+    final userMessage = Message(
+      id: 'temp_user_${DateTime.now().millisecondsSinceEpoch}',
+      content: content,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+    _localMessages.add(userMessage);
+    state = AsyncValue.data(List.from(_localMessages));
+
+    // Save user message to database
     await supabase.saveMessage(
       sessionId: sessionId,
       content: content,
       isUser: true,
     );
 
-    ref.invalidateSelf();
-
-    final messages = await future;
-    final response = await openai.sendMessage(
-      message: content,
-      conversationHistory: messages,
-    );
-
-    await supabase.saveMessage(
-      sessionId: sessionId,
-      content: response,
+    // Add typing indicator
+    final typingMessage = Message(
+      id: 'temp_typing_${DateTime.now().millisecondsSinceEpoch}',
+      content: '',
       isUser: false,
+      timestamp: DateTime.now(),
+      isTyping: true,
     );
+    _localMessages.add(typingMessage);
+    state = AsyncValue.data(List.from(_localMessages));
 
-    ref.invalidateSelf();
+    try {
+      // Get messages for context
+      final messages = await supabase.getMessages(sessionId);
+      
+      // Stream AI response
+      String fullResponse = '';
+      await for (final chunk in openai.sendMessageStream(
+        message: content,
+        conversationHistory: messages,
+      )) {
+        fullResponse += chunk;
+        
+        // Remove typing indicator and update with streaming response
+        _localMessages.removeLast();
+        final aiMessage = Message(
+          id: 'temp_ai_${DateTime.now().millisecondsSinceEpoch}',
+          content: fullResponse,
+          isUser: false,
+          timestamp: DateTime.now(),
+        );
+        _localMessages.add(aiMessage);
+        state = AsyncValue.data(List.from(_localMessages));
+      }
 
-    if (messages.isEmpty) {
-      final title = content.length > 30 ? '${content.substring(0, 30)}...' : content;
-      await supabase.updateChatSession(sessionId, title);
-      ref.invalidate(chatSessionsProvider);
+      // Save final AI response to database
+      await supabase.saveMessage(
+        sessionId: sessionId,
+        content: fullResponse,
+        isUser: false,
+      );
+
+      // Refresh from database to get proper IDs
+      ref.invalidateSelf();
+
+      // Update session title if first message
+      if (messages.isEmpty) {
+        final title = content.length > 30 ? '${content.substring(0, 30)}...' : content;
+        await supabase.updateChatSession(sessionId, title);
+        ref.invalidate(chatSessionsProvider);
+      }
+    } catch (e) {
+      // Remove typing indicator on error
+      _localMessages.removeLast();
+      state = AsyncValue.data(List.from(_localMessages));
+      rethrow;
     }
   }
 }
