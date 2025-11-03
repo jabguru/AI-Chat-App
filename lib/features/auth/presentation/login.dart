@@ -14,6 +14,7 @@ import 'package:ai_chat_app/features/chat/presentation/chat_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -48,9 +49,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String error = 'An error occured';
+        if (e is AuthApiException) {
+          error = e.message;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
+            content: Text(
+              'Login failed: $error',
+              style: context.textTheme.bodyMedium.c(AppColors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );

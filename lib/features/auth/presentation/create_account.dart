@@ -1,5 +1,6 @@
 import 'package:ai_chat_app/core/theme/colors.dart';
 import 'package:ai_chat_app/core/utils/extensions/context_extension.dart';
+import 'package:ai_chat_app/core/utils/extensions/text_style_extension.dart';
 import 'package:ai_chat_app/core/utils/validators.dart';
 import 'package:ai_chat_app/core/widgets/app_scaffold.dart';
 import 'package:ai_chat_app/core/widgets/button.dart';
@@ -13,6 +14,7 @@ import 'package:ai_chat_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
@@ -61,9 +63,17 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String error = 'An error occured';
+        if (e is AuthApiException) {
+          error = e.message;
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sign up failed: ${e.toString()}'),
+            content: Text(
+              'Sign up failed: $error',
+              style: context.textTheme.bodyMedium.c(AppColors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
