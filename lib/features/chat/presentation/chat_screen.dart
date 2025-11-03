@@ -59,7 +59,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         await ref
             .read(chatMessagesProvider(currentSession.id).notifier)
             .sendMessage(content);
-        _scrollToBottom();
       }
     } catch (e) {
       if (mounted) {
@@ -110,13 +109,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      Future.delayed(Duration(milliseconds: 300), () {
+        if (_scrollController.hasClients && mounted) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     });
   }
 
@@ -154,6 +155,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = currentSession != null
         ? ref.watch(chatMessagesProvider(currentSession.id))
         : null;
+
+    // Auto-scroll when messages update
+    if (currentSession != null) {
+      ref.listen(
+        chatMessagesProvider(currentSession.id),
+        (previous, next) {
+          next.whenData((messages) {
+            if (messages.isNotEmpty) {
+              _scrollToBottom();
+            }
+          });
+        },
+      );
+    }
 
     return AppScaffold(
       hasPadding: false,
