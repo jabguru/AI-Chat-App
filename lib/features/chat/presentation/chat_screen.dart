@@ -22,7 +22,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _voice = VoiceService.instance;
 
   bool _isListening = false;
-  bool _isSpeaking = false;
+  String? _currentSpeakingMessageId;
 
   @override
   void initState() {
@@ -95,14 +95,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     setState(() => _isListening = false);
   }
 
-  Future<void> _speakMessage(String text) async {
-    if (_isSpeaking) {
+  Future<void> _speakMessage(String text, String messageId) async {
+    if (_voice.isSpeaking && _currentSpeakingMessageId == messageId) {
+      // Stop speaking this message
       await _voice.stop();
-      setState(() => _isSpeaking = false);
+      setState(() => _currentSpeakingMessageId = null);
     } else {
-      setState(() => _isSpeaking = true);
+      // Stop any current speech and start new one
+      if (_voice.isSpeaking) {
+        await _voice.stop();
+      }
+      setState(() => _currentSpeakingMessageId = messageId);
       await _voice.speak(text);
-      setState(() => _isSpeaking = false);
+      setState(() {
+        if (_currentSpeakingMessageId == messageId) {
+          _currentSpeakingMessageId = null;
+        }
+      });
     }
   }
 
@@ -456,11 +465,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   children: [
                     IconButton(
                       icon: Icon(
-                        _isSpeaking ? Icons.stop : Icons.volume_up,
+                        _currentSpeakingMessageId == message.id
+                            ? Icons.stop
+                            : Icons.volume_up,
                         size: 18,
                         color: AppColors.textSecondary,
                       ),
-                      onPressed: () => _speakMessage(message.content),
+                      onPressed: () =>
+                          _speakMessage(message.content, message.id),
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints(),
                     ),

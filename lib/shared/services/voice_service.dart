@@ -14,6 +14,7 @@ class VoiceService {
   final FlutterTts _flutterTts = FlutterTts();
   final SpeechToText _speechToText = SpeechToText();
   bool _isTtsInitialized = false;
+  bool _isSpeaking = false;
 
   VoiceService._() {
     _initializeTts();
@@ -81,14 +82,17 @@ class VoiceService {
       // Set up handlers
       _flutterTts.setStartHandler(() {
         log('TTS started speaking');
+        _isSpeaking = true;
       });
 
       _flutterTts.setCompletionHandler(() {
         log('TTS completed speaking');
+        _isSpeaking = false;
       });
 
       _flutterTts.setErrorHandler((msg) {
         log('TTS error: $msg');
+        _isSpeaking = false;
       });
 
       _isTtsInitialized = true;
@@ -117,11 +121,18 @@ class VoiceService {
         } catch (_) {}
       }
 
+      // Set _isSpeaking to true before speaking
+      _isSpeaking = true;
+
       log('Calling TTS speak...');
+      await _flutterTts.awaitSpeakCompletion(true);
       final result = await _flutterTts.speak(text);
       log('TTS speak result: $result');
+
+      // Note: _isSpeaking will be set to false by the completion handler
     } catch (e) {
       log('Error in speak: $e');
+      _isSpeaking = false;
       rethrow;
     }
   }
@@ -194,6 +205,8 @@ class VoiceService {
   }
 
   bool get isListening => _speechToText.isListening;
+
+  bool get isSpeaking => _isSpeaking;
 
   void dispose() {
     _flutterTts.stop();
