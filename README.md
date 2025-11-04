@@ -305,10 +305,6 @@ dart run build_runner build --delete-conflicting-outputs
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - Design inspiration from [AI Chat Bot](https://www.figma.com/community/file/1369245876107831160)
